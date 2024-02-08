@@ -1,0 +1,831 @@
+% \section{Main result}
+% % Main result \cite{kalabic_14acc,murray_book,Bhat2000}.
+
+% 数学的準備や主結果などのメイン部分 \cite{latex}．
+\section{Preliminaries}
+\subsection{Two-wheeled drone model}
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=1\linewidth]{./drawing/pdf/Two-Wheeled_Drone.pdf}
+    \caption{Two-wheeled drone moving on a wall.}
+    \label{fig:two-wheeled_drone_moving_on_a_wall}
+\end{figure}
+
+Consider a two-wheeled drone moving on a wall illustrated in Fig.~\ref{fig:two-wheeled_drone_moving_on_a_wall}.
+We choose an inertial frame $e_i \in \mathbb{R}^3$, $i \in \{1, 2, 3 \}$ and a body-fixed frame $\{b_x, b_y, b_z\}$.
+The origin of the body-fixed frame is the center of mass of the drone.
+The mass of the drone is $m \in \mathbb{R}$, acceleration of gravity is $g \in \mathbb{R}$, inertia tensor is $J \in \mathbb{R}^{3 \times 3}$, rotation matrix is $R \in SO(3)$, $ZXY$ Euler angles is $\eta = [\alpha ~ \beta ~ \gamma]^T \in \mathbb{R}^3$, body angular velocity is $\omega^b = [\omega_1^b ~ \omega_2^b ~ \omega_3^b]^T \in \mathbb{R}^3$, position in the world frame is $p = [x ~ y ~ z]^T \in \mathbb{R}^3$, body velocity is $v^b = [v_1^b ~ v_2^b ~ v_3^b]^T \in \mathbb{R}^ 3$, thrust is $F^b = [0 ~ 0 ~ f] \in \mathbb{R}^3$, body torque is $\tau^b \in \mathbb{R}^3$.
+
+The kinematics of the translational motion is given by
+\begin{align}
+    \label{eq:kinematics_of_translation}
+    \dot{p} &= Rv^b = 
+    \begin{bmatrix}
+        0\\
+        - \frac{v_3^b \sin \beta}{\cos \gamma}\\
+        \frac{v_3^b \cos \beta}{\cos \gamma}
+    \end{bmatrix}
+    = \frac{1}{\cos \gamma} R_2(\beta) (v_3^b e_3)
+\end{align}
+where
+\begin{align}
+    R &=
+    \begin{bmatrix}
+        r_{11} & r_{12} & r_{13} \\
+        r_{21} & r_{22} & r_{23} \\
+        r_{31} & r_{32} & r_{33}
+    \end{bmatrix}\\
+    &=
+    \begin{bmatrix}
+        \cos \gamma & 0 & \sin \gamma \\
+        \sin \beta \sin \gamma & \cos \beta & - \sin \beta \cos \gamma \\
+        - \cos \beta \sin \gamma & \sin \beta & \cos \beta \cos \gamma
+    \end{bmatrix}
+    \label{eq:rotation_matrix}
+\end{align}
+
+\begin{align}
+    \label{eq:definition_of_R_2}
+    R_2(\beta) =
+    \begin{bmatrix}
+        1 & 0 & 0 \\
+        0 & \cos \beta & - \sin \beta \\
+        0 & \sin \beta & \cos \beta
+    \end{bmatrix}.
+\end{align}
+
+The kinematics of the rotational motion in the $ZXY$ Euler angles representation is given by
+\begin{align}
+    \label{eq:kinematic_of_rotation_with_constraint_simplified_ver}
+\dot{\eta} = \Phi(\eta) \omega^b
+\end{align}
+where
+\begin{align*}
+    \Phi(\eta) = 
+    \begin{bmatrix}
+        \frac{\sin \gamma}{\cos \beta} & 0 & \frac{\cos \gamma}{\cos \beta}\\
+        \cos \gamma & 0 & - \sin \gamma\\
+        \frac{\sin \beta \sin \gamma}{\cos \beta} & 1 & \frac{\sin \beta \cos \gamma}{\cos \beta}
+    \end{bmatrix}.
+\end{align*}
+The inverse of $ \Phi(\eta) $ is $ \Psi = \Phi^{-1} $, which is given by
+\begin{align}
+    \label{eq:definition_of_Psi}
+    \Psi(\eta) =
+    \begin{bmatrix}
+        \cos \beta \sin \gamma & \cos \gamma & 0 \\
+        - \sin \beta & 0 & 1 \\
+        \cos \beta \cos \gamma & - \sin \gamma & 0
+    \end{bmatrix}.
+\end{align}
+
+The dynamics of the translational motion is given by
+\begin{align}
+	\label{eq:translational_dynamics}
+	m\ddot{p}+mge_3 +\lambda_1 A^T +\lambda_2 e_1 = Rfe_3.
+\end{align}
+
+The dynamics of the rotational motion \cite{nonami_autonomous_2010} is given by
+\begin{align}
+    \label{eq:rotational_el_eq}
+    M(\eta) \ddot{\eta} + C(\eta, \dot{\eta}) \dot{\eta} = \Psi(\eta)^T \tau^b - \lambda_3 e_1.
+\end{align}
+
+\subsection{Exponential control barrier functions(ECBF)}
+\label{sec:ECBF}
+% \ref{sec:CBF}節で定義されたように，
+CBF can be applied when the derivative of $ h(x) $ is one.
+We relax this relative degree condition and assume that $ h(x) $ has a higher relative degree $ r \geq 1 $, i.e., it satisfies the following equation,
+\begin{align}
+    \label{eq:h_relative_degree}
+    h^{(r)}(x,u) = L_f^r h(x) + L_g L_f^{r-1} h(x)u.
+\end{align}
+Here, $L_g L_f^{r-1} h(x) \neq 0 $ and $ L_g L_f^2 h(x) = \cdots ~ L_g L_f^{r-2} h(x) = 0 $, $ \forall x \in D $
+We further define the following,
+\begin{align}
+    \label{eq:definition_of_eta_b}
+    \eta_b(x) \coloneqq
+    \begin{bmatrix}
+        h(x) \\
+        \dot{h}(x) \\
+        \ddot{h}(x) \\
+        \vdots \\
+        h^{(r-1)}(x)
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        h(x) \\
+        L_f h(x) \\
+        L_f^2 h(x) \\
+        \vdots \\
+        L_f^{r-1} h(x)
+    \end{bmatrix}.
+\end{align}
+We assume that there exists a control input $ u \in U_{\mu} \subset \mathbb{R} $ for $ \mu \in \mathbb{R} $ such that $ L_f^r h(x) + L_g L_f^{r-1} h(x) u = \mu $.
+Then, the dynamics of $ h(x) $ can be described as the following linear system,
+\begin{align}
+    \label{eq:linear_system_of_h}
+    \dot{\eta}_b(x) &= F \eta_b(x) + G \mu, \\
+    h(x) &= C \eta_b (x)
+\end{align}
+where
+\begin{align}
+    \label{eq:definition_of_F_G_C}
+    F &= 
+    \begin{bmatrix}
+        0 & 1 & 0 & \cdots & 0 \\
+        0 & 0 & 1 & \cdots & 0 \\
+        \vdots & \vdots & \vdots & \ddots & \vdots \\
+        0 & 0 & 0 & \cdots & 1 \\
+        0 & 0 & 0 & \cdots & 0
+    \end{bmatrix},
+    G = 
+    \begin{bmatrix}
+        0 \\
+        0 \\
+        \vdots \\
+        0 \\
+        1   
+    \end{bmatrix}, \\
+    C &= [1 ~ 0 ~ \cdots ~ 0].
+\end{align}
+If we choose the state feedback $ \mu = - K_{\alpha} \eta_b (x) $, then $ h(x(t)) = C e^{(F - GK_{\alpha})t} \eta_b (x_0) $.
+Furthermore, if $ \mu \geq -K_{\alpha} \eta_b (x) $, then $ h(x(t)) \geq C e^{(F - GK_{\alpha})t} \eta_b (x_0) $ by comparison lemma.
+
+\begin{definition}
+    Given a set $ C \subset D \subset \mathbb{R} $, a function $ h : D \rightarrow \mathbb{R} $ that is $ r $ times continuously differentiable is an exponential control barrier function(ECBF) if there exists a column vector $ K_{\alpha} \in \mathbb{R}^r $ that satisfies the following equation for all $ x \in D $,
+    \begin{align}
+        \label{eq:definition_of_ECBF}
+        \sup_{u \in U} [ L_f^r h(x) + L_g L_f^{r-1} h(x) u] \geq - K_{\alpha} \eta_b (x).
+    \end{align}
+    Here, $ \forall x \in \mathrm{Int} (C) $, $ h(x(t)) \geq C e^{(F - GK_{\alpha})t} \eta_b (x_0) $ whenever $ h(x_0) \geq 0 $.
+    %何か表現がおかしい
+\end{definition}
+
+\section{Control design}
+\label{sec:control_design}
+\subsection{Problem settings and program formulation}
+\label{subsec:problem_setting}
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=1\linewidth]{./drawing/pdf/CBF_image.pdf}
+    \caption{Outline drawing of obstacle avoidance.}
+    \label{fig:outline_drawing_of_obstacle_avoidance}
+\end{figure}
+Consider a two-wheeled drone moving on a wall with a circular obstacle of a center $ p_c = [0, y_c, z_c]^T $ and a radius $ r \in \mathbb{R} $.
+We show the outline drawing of the control law of this paper in Fig.~\ref{fig:outline_drawing_of_obstacle_avoidance}.
+The blue dotted line is the image of the target trajectory, and the green solid line is the image of the trajectory when the obstacle avoidance control is used.
+When the target trajectory is inside the obstacle, it is necessary to avoid the obstacle.
+However, if the drone tries to avoid the obstacle by rolling on the wall, the gravity component in the lateral direction becomes large, and there is a risk of slipping.
+Therefore, the control objective of this paper is to avoid obstacles without slipping.
+The condition for not slipping is expressed by the following equation,
+\begin{align}
+    \label{eq:condition_of_no_slip}
+    \| \lambda_1 A^T \| \leq \mu \| \lambda_2 e_1 \|.
+\end{align}
+where coefficient of static friction is $ \mu \in \mathbb{R} $, slipping force is $ \| \lambda_1 A^T \| $, and pushing force to the wall is $ \| \lambda_2 e_1 \|$.
+$ A^T = [0 ~ r_{22} ~ r_{32}]^T $ gives $ \| A^T \| = 1 $ and since $ \| \lambda_2 e_1 \| $ is pushing force, $ \lambda_2 \geq 0 $.
+Therefore, we can transform the equation \eqref{eq:condition_of_no_slip} as follows,
+\begin{align}
+    \label{eq:condition_of_no_slip_2}
+    \| \lambda_1 \| \leq  \mu \lambda_2.
+\end{align}
+Hence, the control objective of this paper is to design the input $ f $, $ \tau^b $ that satisfies the condition \eqref{eq:condition_of_no_slip_2} and the following equation,
+\begin{align*}
+    \begin{cases}
+            \displaystyle \lim_{t \rightarrow \infty} 
+            \left \| p - p_d \right \| = 0
+        &~ {\mathrm{if} } ~ \| p_d - p_c \| > r  \\
+        \| p - p_c \| \geq r &~ {\mathrm{otherwise} }.
+    \end{cases}
+\end{align*}
+%\begin{remark}
+%    \label{remark:1}
+%    ここには注意を書いてください．
+%    注意には番号がつくようになっています．
+%\end{remark}
+\begin{figure}[t]
+\centering
+\includegraphics[width=1\linewidth]{./drawing/pdf/control_structure_based_on_dynamics.pdf}
+\caption{Block diagram of the proposed control structure.}
+\label{fig:block_diagram_of_the_proposed_control_structure}
+\end{figure}
+The control structure of this paper is shown in Fig.~\ref{fig:block_diagram_of_the_proposed_control_structure}.
+We design the control law of translational motion based on kinematics. 
+Therefore, we design the velocity feedback control law for velocity projection, and by using this, we finally get the thrust.
+Furthermore, we design the control law of rotational motion based on linearized dynamics.
+
+
+\textcolor{red}{
+\subsection{Velocity input design}
+\label{subsec:controller_of_translation}
+% 車輪付きドローンの壁面走行時の自律制御は，車輪があるため非ホロノミックシステムとなり制御が難しい．
+% 非ホロノミックシステムを有する二輪車両に対して，キネマティクスをもとにして制御則が提案されている．
+    本論文では，文献\cite{rodriguez-cortesNewGeometricTrajectory2022}で提案された速度入力を用いた二輪車両ロボットの位置制御則を車輪付きドローンに拡張する．
+    本節では，本論文の貢献の理解のために文献\cite{rodriguez-cortesNewGeometricTrajectory2022}の主結果を車輪付きドローンに適用するために修正した制御則を導入する．
+    車輪付きドローンのキネマティクス\eqref{eq:kinematics_of_translation}, \eqref{eq:kinematic_of_rotation_with_constraint_simplified_ver} から，$y$-$z$ 平面の要素を取り出すと次式が得られる．
+    \begin{align}
+        \dot{p} &= \frac{1}{\cos \gamma}
+        \begin{bmatrix}
+            \cos \beta & -\sin \beta \\
+            \sin \beta & \cos \beta
+        \end{bmatrix}
+        \begin{bmatrix}
+            0 \\
+            v_3   
+        \end{bmatrix} \\
+        \dot{\beta} &= w
+    \end{align}
+    ここでは，文献\cite{rodriguez-cortesNewGeometricTrajectory2022} と同様に，入力が $v_3$, $w$ であるとみなし制御入力を設計する．
+    なお，文献 \cite{rodriguez-cortesNewGeometricTrajectory2022}とは異なり，オイラー角 $\gamma$ が存在しているが，この角度は目標姿勢$\gamma_d$に指定できると仮定する．
+}
+In this paper, we propose a trajectory tracking control law for two-wheeled drones based on the control law for unicycle mobile robots \cite{rodriguez-cortesNewGeometricTrajectory2022}.
+Suppose that the position $ y $, $ z $ of the drone is $ X = [y ~ z]^T \in \mathbb{R}^2 $, the target position of $ y $, $ z $ is $ X_d = [y_d ~ z_d]^T \in \mathbb{R}^2 $, the position error of $ y $, $ z $ is $ \tilde{X} = [y - y_d ~ z - z_d ]^T = X - X_d \in \mathbb{R}^2 $, and the positive definite matrix $ K_p > 0 $.
+The desired velocity $ w = [w_y ~ w_z] \in \mathbb{R}^2 $ is designed by the following translational controller,
+\begin{align}
+    \label{eq:kin_inp_trans}
+    w = \cos \gamma_d ( - K_p \tilde{X} + \dot{X}_d ).
+\end{align}
+Considering the nonholonomic constraint $ v_2^b = 0 $, the desired velocity $ w $ is transformed into the projection velocity by the following equation,
+\begin{align}
+    v_{3d}^b = w^T \left ( E^T R_2 \left (\beta \right ) E \right ) \left ( E^T e_3 \right )
+\end{align}
+where $ E = [e_2 ~ e_3] \in \mathbb{R}^{3 \times 2} $.
+
+
+\textcolor{red}{
+    下から抜き出して追加した．
+    Then, the roll controller for \eqref{eq:roll_dynamics} is given by the following equation,
+    \begin{align}
+    \label{eq:kin_inp_rot}
+        r_{\beta_d} & = (R_d^T \dot{R}_d)^{\vee}.
+    \end{align}
+    このとき，つぎの定理が得られる．
+\begin{theorem}{\cite{rodriguez-cortesNewGeometricTrajectory2022}}
+    システム \eqref{} に入力\eqref{eq:kin_inp_trans}, \eqref{eq:kin_inp_rot}を適用する．
+    Almost global stabilityのはなし．
+\end{theorem}
+\begin{proof}
+    文献\cite{rodriguez-cortesNewGeometricTrajectory2022}と同様．
+\end{proof}
+以降の議論では，定理**を車輪付きドローンの問題設定に拡張する．
+}
+
+
+\subsection{Linearlization of rotational dynamics and pitch controller}
+\label{subsec:linearizer_and_pitch_controller}
+We define a new virtual input $ \tilde{\tau}^b \in \mathbb{R}^3 $ as follows,
+\begin{align}
+    \label{eq:vertual_input_of_tau}
+    \tau^b = J \Psi(\eta) \tilde{\tau}^b + \left (\Psi(\eta)^T \right )^{-1} C(\eta, \dot{\eta}) \dot{\eta} + \lambda_3 e_1.
+\end{align}
+Then, the rotational dynamics \eqref{eq:rotational_el_eq} can be linearized as follows,
+\begin{align}
+    \label{eq:linearized_dynamics_of_rotation}
+    \ddot{\eta} = \tilde{\tau}^b.
+\end{align}
+When running on the wall, it is important for two-wheeled drones to push the drone against the wall.
+This is because the stability of the drone against sideslip or side wind is increased and the grip is improved.
+By \eqref{eq:linearized_dynamics_of_rotation}, the linearized dynamics of the pitch direction is given by the following equation,
+\begin{align}
+    \label{eq:linearized_dynamics_of_pitch}
+    \ddot{\gamma} = \tilde{\tau}_{\gamma}^b.
+\end{align}
+We design the pitch controller as follows,
+\begin{align}
+    \label{eq:controller_of_pitch}
+    \tilde{\tau}_{\gamma}^b = - k_{p_{\gamma}} (\gamma - \gamma_d) - k_{d_{\gamma}} (\dot{\gamma} - \dot{\gamma}_d)
+\end{align}
+where $ k_{p_{\gamma}}, k_{d_{\gamma}} > 0 $.
+
+
+\subsection{Roll controller}
+\label{subsec:controller_of_roll}
+The linearized dynamics of the roll is given by the following equation,
+\begin{align}
+    \label{eq:roll_dynamics}
+    \ddot{\beta} = \tilde{\tau}_{\beta}^b
+\end{align}
+Then, the roll controller for \eqref{eq:roll_dynamics} is given by the following equation,
+\begin{align}
+    \begin{cases}
+        \tilde{\tau}_{\beta}^b &= - k_{\beta} (\dot{\beta} - r_{\beta}) + \dot{r}_{\beta} \\
+        r_{\beta} &= r_{\beta_d} - k_R ( \mathrm{sk}(\tilde{R}))^{\vee}
+        \label{eq:controller_of_roll}
+    \end{cases}
+\end{align}
+where $ k_{\beta} > 0 $ and
+\begin{align}
+    \begin{cases}
+    \tilde{R} &= R_d^T E^T R_2(\beta)E \\
+    R_d &= \left [(-1)^{\wedge} \frac{w}{\|w\|} ~ \frac{w}{\|w\|} \right ] \\
+    r_{\beta_d} &= (R_d^T \dot{R}_d)^{\vee}.
+    \label{eq:definition_of_error_angular_velocity}
+    \end{cases}
+\end{align}
+
+
+\subsection{Translational dynamics and velocity feedback}
+\label{subsec:translational_dynamics_and_velocity_feedback}
+%安定性の証明も書く
+We design the controller to obtain the thrust from the  velocity projection $ v_{3d}^b $ obtained by the translational controller.
+\eqref{eq:translational_dynamics} and \eqref{eq:kinematics_of_translation} give the following equation,
+\begin{align*}
+    f = m (f_1 \dot{v}_3^b + f_2 + f_3)
+\end{align*}
+where
+\begin{align*}
+    \begin{cases}
+            f_1 &= 1 - \frac{r_{13} (r_{32} r_{21} - r_{22} r_{31})}{r_{11}(r_{32} r_{23} - r_{22} r_{33})}\\
+            f_2 &= \frac{v_3^b \omega_2^b (r_{32} r_{21} - r_{22} r_{31}  - r_{11}) - g r_{11} r_{22} + \omega_2^b r_{13} v_1^b}{r_{11} (r_{32} r_{23} - r_{22} r_{33})}\\
+            f_3 &= v_1^b \omega_2^b.
+    \end{cases}
+\end{align*}
+Therefore, the velocity feedback control law $ \dot{v}_3^b = -k_3 (v_3^b - v_{3d}^b ) + \dot{v}_{3d}^b $ is applied by the positive constant $ k_3 > 0 $.
+Then, the thrust is given by the following equation,
+\begin{align*}
+    f = m \left (f_1 \left ( -k_3 \left (v_3^b - v_{3d}^b \right ) + \dot{v}_{3d}^b \right ) + f_2 + f_3 \right ).
+\end{align*}
+We prove the equilibrium point of the system with the controller is almost globally asymptotically stable.
+We investigate the stability of the origin of the system in the rotational motion and the translational motion, respectively, and then discuss the stability of the entire system by combining the rotational motion and the translational motion.
+First, from \eqref{eq:linearized_dynamics_of_pitch} and \eqref{eq:controller_of_pitch}, the linearized dynamics of the pitch direction is given by the following equation,
+\begin{align}
+    \label{eq:pitch_dynamics_and_controller}
+    \ddot{\gamma} - \ddot{\gamma}_d= - k_{p_{\gamma}} (\gamma - \gamma_d) - k_{d_{\gamma}} (\dot{\gamma} - \dot{\gamma}_d)
+\end{align}
+\eqref{eq:pitch_dynamics_and_controller} can be rewritten as follows,
+\begin{align}
+    \label{eq:error_dynamics_of_pitch}
+    \ddot{\gamma}_e = - k_{p_{\gamma}} \gamma_e - k_{d_{\gamma}} \dot{\gamma}_e
+\end{align}
+where $ \gamma_e = \gamma - \gamma_d $.
+Therefore, \eqref{eq:error_dynamics_of_pitch} is rewritten as follows,
+\begin{align}
+    \label{eq:error_dynamics_of_pitch_matrix}
+    \frac{d}{dt}
+    \begin{bmatrix}
+        \gamma_e \\
+        \dot{\gamma}_e
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        0 & 1 \\
+        - k_{p_{\gamma}} & -k_{d_{\gamma}}
+    \end{bmatrix}
+    \begin{bmatrix}
+        \gamma_e \\
+        \dot{\gamma}_e
+    \end{bmatrix}.
+\end{align}
+% ここで，
+% \begin{align*}
+%     G =
+%     \begin{bmatrix}
+%         0 & 1 \\
+%         - k_{p_{\gamma}} & -k_{d_{\gamma}}
+%     \end{bmatrix}
+% \end{align*}
+% とおくと，固有方程式は
+% \begin{align*}
+%     | G - \lambda I | = 
+%     \begin{vmatrix}
+%         - \lambda & 1 \\
+%         - k_{p_{\gamma}} & - k_{d_{\gamma}} - \lambda
+%     \end{vmatrix}
+%     &= \lambda (k_{d_{\gamma}} + \lambda) + k_{p_{\gamma}} \\
+%     &= \lambda^2 + k_{d_{\gamma}} \lambda + k_{p_{\gamma}} = 0
+% \end{align*}
+% となるので，固有値の実部は次式となる．
+% \begin{align*}
+%     \mathrm{R_e}(\lambda) = - \frac{k_{d_{\gamma}}}{2}
+% \end{align*}
+Therefore, the eigenvalue is negative, so the origin of the system \eqref{eq:error_dynamics_of_pitch_matrix} is global asymptotically stable.
+From \eqref{eq:roll_dynamics} and \eqref{eq:controller_of_roll}, the linearized dynamics of the roll direction is given by the following equation,
+\begin{align}
+    \label{eq:roll_dynamics_and_controller}
+    \ddot{\beta} = - k_{\beta} (\dot{\beta} - r_{\beta}) + \dot{r}_{\beta}.
+\end{align}
+\eqref{eq:roll_dynamics_and_controller} can be rewritten as follows,
+\begin{align}
+    \label{eq:error_dynamics_of_roll}
+    \ddot{\beta}_e = -k_{\beta} \dot{\beta}_e
+\end{align}
+where $ \dot{\beta}_e = \dot{\beta} - r_{\beta} $.
+Therefore, the system \eqref{eq:error_dynamics_of_roll} is asymptotically stable.
+\eqref{eq:roll_dynamics_and_controller} can be rewritten as follows,
+\begin{align}
+    \label{eq:roll_dynamics_and_controller_with_delta}
+    \ddot{\beta} = \Delta_1 + \dot{r}_{\beta}
+\end{align}
+where $ \Delta_1 = -k_{\beta} (\dot{\beta} - r_{\beta}) $.
+Furthermore, by integrating both sides of \eqref{eq:roll_dynamics_and_controller_with_delta}, we get the following equation,
+\begin{align}
+\label{eq:roll_dynamics_and_controller_with_delta_integrated}
+    \dot{\beta} = \int \Delta_1 dt + r_{\beta} = \Delta_1' + r_{\beta}.
+\end{align}
+By writing \eqref{eq:roll_dynamics_and_controller_with_delta_integrated} as $ SO(2) $, we get the following equation,
+\begin{align}
+    \label{eq:roll_dynamics_and_controller_SO(2)}
+    \dot{R} = R \hat{r}_{\beta} + \Delta_1''.
+\end{align}
+Furthermore, \eqref{eq:roll_dynamics_and_controller_SO(2)} can be rewritten as follows,
+\begin{align}
+    \label{eq:roll_dynamics_and_controller_SO(2)_error}
+    \dot{\tilde{R}} = \tilde{R} \hat{\tilde{r}}_{\beta} + \Delta_1'''
+\end{align}
+where $ \tilde{r}_{\beta} = r_{\beta} - r_{\beta_d} $.
+Next, we consider the following equation without the term $ \Delta_1''' $ in \eqref{eq:roll_dynamics_and_controller_SO(2)_error},
+\begin{align}
+    \label{eq:roll_dynamics_and_controller_SO(2)_error_without_delta}
+    \dot{\tilde{R}} = \tilde{R} \hat{\tilde{r}}_{\beta}.
+\end{align}
+% rodriguezさんの論文と全く同じ証明部分は省略(以下コメントアウト)
+% 式\eqref{eq:controller_of_roll}を代入すれば次式が得られる．
+% \begin{align}
+%     \label{eq:error_rotation_dynamics}
+%     \dot{\tilde{R}} = - k_R \tilde{R} \mathrm{sk}(\tilde{R}).
+% \end{align}
+% 平衡点では次式が成り立つ．
+% \begin{align*}
+%     0 = -k_R \tilde{R}_e \mathrm{sk}(\tilde{R}_e).
+% \end{align*}
+% 両辺に左から$ \tilde{R}_e^T $を掛けて整理すれば次式が得られる．
+% \begin{align}
+%     \label{eq:equilibrium_points}
+%     I = \mathrm{sym}(\tilde{R}_e) \mathrm{sym}(\tilde{R}_e).
+% \end{align}
+% ゆえに，平衡点は$ \tilde{R}_e = I $と$ \tilde{R}_e = -I $の二つのみである．
+% さらに，$ \tilde{R} = -I $の摂動を考える．
+% \begin{align}
+%     \label{eq:perturbation}
+%     \tilde{R}_e^{\varepsilon} = - I e^{\varepsilon (\Delta \Psi)^{\wedge}}.
+% \end{align}
+% 式\eqref{eq:perturbation}と式\eqref{eq:error_rotation_dynamics}より，次式が得られる．
+% \begin{align*}
+%     \dot{\tilde{R}}_e^{\varepsilon} = - k_R \tilde{R}_e^{\varepsilon} \mathrm{sk}(\tilde{R}_e^{\varepsilon}).
+% \end{align*}
+% $ \varepsilon $について微分し，$ \varepsilon = 0 $を代入して次式の線形近似が得られる．
+% \begin{align*}
+%     (\Delta \dot{\Psi})^{\wedge} = k_R (\Delta \Psi)^{\wedge}.
+% \end{align*}
+% ゆえに，平衡点$ \tilde{R}_e = -I $は不安定な平衡点である．
+% リアプノフ関数の候補として，$ \phi(\tilde{R}) $を考える．
+% \begin{align*}
+%     \phi(\tilde{R}) = \frac{1}{2} \mathrm{trace}( I - \tilde{R}).
+% \end{align*}
+% 両辺を時間微分すると次式が得られる．
+% \begin{align*}
+%     \dot{\phi}(\tilde{R}) = - \frac{1}{2} \mathrm{trace} (\dot{\tilde{R}}).
+% \end{align*}
+% これと式\eqref{eq:error_rotation_dynamics}より次式が得られる．
+% \begin{align*}
+%     \dot{\phi}(\tilde{R}) = -k_R ( \mathrm{sk}(\tilde{R})^{\vee})^2.
+% \end{align*}
+From \cite{rodriguez-cortesNewGeometricTrajectory2022}, $ \tilde{R} = I $ and $ \tilde{R} = - I $ are the only equilibrium points of the system \eqref{eq:roll_dynamics_and_controller_SO(2)_error_without_delta}, and $ \tilde{R}_e = -I $ is an unstable equilibrium point, and it almost globally asymptotically converges to $ \tilde{R} = I $.
+The main result about the direction of rotation is as follows.
+
+%ここから証明
+\begin{theorem}
+    \label{theorem:1}
+    The equilibrium point of the system \eqref{eq:roll_dynamics_and_controller_SO(2)_error} $ \tilde{R}_e = -I $ is unstable, and the desired equilibrium point $ \tilde{R}_e = I $ is almost globally asymptotically stable if the controller \eqref{eq:controller_of_roll} is designed to the rotational error dynamics \eqref{eq:roll_dynamics_and_controller_SO(2)_error}.
+\end{theorem}
+
+\begin{proof}
+    When the controller \eqref{eq:controller_of_roll} is applied to the system \eqref{eq:roll_dynamics}, the origin of the system \eqref{eq:roll_dynamics} is almost global asymptotically stable, so $ \displaystyle \lim_{t \rightarrow \infty} \dot{\beta} = r_{\beta} $ holds.
+    Therefore, $ \displaystyle \lim_{t \rightarrow \infty} \Delta_1' = 0 $ holds.
+    Furthermore, when the controller \eqref{eq:controller_of_roll} is applied to  \eqref{eq:roll_dynamics_and_controller_SO(2)_error_without_delta}, the equilibrium point $ \tilde{R}_e = -I $ is unstable, and the desired equilibrium point $ \tilde{R}_e = I $ is almost global asymptotically stable.
+    Hence, similar to the system \eqref{eq:roll_dynamics_and_controller_SO(2)_error}, the equilibrium point $ \tilde{R}_e = -I $ is unstable, and the desired equilibrium point $ \tilde{R}_e = I $ is almost globally asymptotically stable.
+\end{proof}
+Therefore, the origin of \eqref{eq:error_dynamics_of_pitch_matrix} and \eqref{eq:roll_dynamics_and_controller_SO(2)_error} are almost global asymptotically stable if the controller \eqref{eq:controller_of_pitch} and \eqref{eq:controller_of_roll} are applied to the system \eqref{eq:error_dynamics_of_pitch_matrix} and \eqref{eq:roll_dynamics_and_controller_SO(2)_error} respectively.
+
+Next, we consider the stability of the translational motion.
+From \eqref{eq:kinematics_of_translation}, the $ yz $ kinematics of the translational motion is given by the following equation,
+\begin{align}
+    \dot{X} &= \frac{1}{\cos \gamma}(v_{3d}^b - \tilde{v}_{3}^b) (E^T R_2(\beta) E)(E^T e_3) \\
+    % &= \frac{1}{\cos \gamma} v_{3d}^b(D^T R_2(\beta) D)(D^T e_3) \\
+    % &- \frac{1}{\cos \gamma} v_{3e}^b (D^T R_2(\beta) D)(D^T e_3) \\
+    % &= \frac{1}{\cos \gamma_d} v_{3d}^b(D^T R_2(\beta) D)(D^T e_3) + \\
+    % &+ \left ( - \frac{1}{\cos \gamma_d} v_{3d}^b \left (D^T R_2 \left (\beta \right ) D \right ) \left (D^T e_3 \right ) \right ) \\
+    % &+ \frac{1}{\cos \gamma} v_{3d}^b(D^T R_2(\beta) D)(D^T e_3) \\ 
+    % &- \frac{1}{\cos \gamma} v_{3e}^b (D^T R_2(\beta) D)(D^T e_3) \\
+    &= \frac{v_{3d}^b}{\cos \gamma_d} (E^T R_2(\beta) E)(E^T e_3) + \Delta_2 + \Delta_3
+    \label{eq:translation_kinematics_of_yz}
+\end{align}
+where $ \tilde{v}_{3}^b = v_{3d}^b - v_3^b $ and
+\begin{align}
+    \label{eq:definition_of_Delta2}
+    \Delta_2 = - \frac{v_{3d}^b}{\cos \gamma_d} (E^T R_2(\beta) E)(E^T e_3) \\
+    + \frac{v_{3d}^b}{\cos \gamma} (E^T R_2(\beta) E)(E^T e_3)
+\end{align}
+\begin{align}
+    \label{eq:definition_of_Delta3}
+    \Delta_3 = - \frac{\tilde{v}_{3}^b}{\cos \gamma}  (E^T R_2(\beta) E)(E^T e_3).
+\end{align}
+Here, we consider the following equation without the term $ \Delta_2 $ and $ \Delta_3 $ in \eqref{eq:translation_kinematics_of_yz},
+\begin{align}
+    \label{eq:translation_kinematics_of_yz_without_second_term}
+    \dot{X} = \frac{v_{3d}^b}{\cos \gamma_d} (E^T R_2(\beta) E)(E^T e_3).
+\end{align}
+Here, \eqref{eq:translation_kinematics_of_yz_without_second_term} can be rewritten as follows,
+% \begin{align}
+%     \dot{X} &= \frac{1}{\cos \gamma_d} (E^T R_2(\beta)E)(v_{3d}^b E^T e_3)  \frac{(E^T e_3)^T \tilde{R} (E^T e_3)}{(E^T e_3)^T \tilde{R} (E^T e_3)} \\
+%     &+ \frac{1}{\cos \gamma_d} \frac{v_{3d}^b R_d (E^T e_3)}{(E^T e_3)^T \tilde{R} (E^T e_3)} \\
+%     &- \frac{1}{\cos \gamma_d} \frac{v_{3d}^b R_d (E^T e_3)}{(E^T e_3)^T \tilde{R} (E^T e_3)}.
+%     \label{eq:translation_dynamics_of_yz_without_second_term_transformation}
+% \end{align}
+% さらに，式\eqref{eq:translation_dynamics_of_yz_without_second_term_transformation}を次式のように変形する．
+\begin{align}
+    \label{eq:translation_dynamics_of_yz_without_second_term_transformation_2}
+    \dot{X} = &\frac{1}{\cos \gamma_d} \frac{v_{3d}^b R_d (E^T e_3)}{(E^T e_3)^T \tilde{R} (E^T e_3)} + \frac{1}{\cos \gamma_d} \frac{v_{3d}^b}{(E^T e_3)^T \tilde{R} (E^T e_3)} \\
+    &\left ( (E^T e_3)^T \tilde{R} (E^T e_3) (E^T R_2(\beta) E) - R_d(E^T e_3) \right ).
+\end{align}
+From \eqref{eq:velocity_projection} and the second equation of \eqref{eq:definition_of_error_angular_velocity}, we get the following equation,
+\begin{align}
+    \dot{\tilde{X}} &= \frac{1}{\cos \gamma_d} w + \frac{1}{\cos \gamma_d} \|w\| \\
+    & \left ( \left ( \left (E^T e_3 \right )^T \tilde{R} \left (E^T e_3 \right ) \right ) R_d \tilde{R} \left (E^T e_3 \right ) - R_d \left (E^T e_3 \right ) \right ). \\
+    &- \dot{X}_d.
+    \label{eq:error_translation_dynamics_of_yz_without_second_term}
+\end{align}
+% rodriguez論文でいきなり式変形していた部分を導出して証明にした部分なのでカット(コメントアウト)
+% \begin{proof}
+%     はじめに，式\eqref{eq:error_translation_dynamics_of_yz_without_second_term}を示す．
+%     \begin{align}
+%         \label{eq:proof_w_norm}
+%         \frac{v_{3d}^b}{(E^T e_3)^T \tilde{R} (E^T e_3)} = \| w \|.
+%     \end{align}
+%     式\eqref{eq:velocity_projection},  式\eqref{eq:definition_of_error_angular_velocity}の2行目を用いると次式に変形できる．
+%     \begin{align}
+%         \label{eq:proof_w_norm_1}
+%         v_{3d}^b &= w^T (E^T R_2(\beta)E) (E^T e_3) \\
+%         &= \|w\| (E^T e_3)^T R_d^T (E^T R_2(\beta)E) (E^T e_3)
+%     \end{align}
+%     さらに，$ R_d^T (E^T R_2(\beta)E) = \tilde{R} $なので次式となる．
+%     \begin{align*}
+%         v_{3d}^b = \|w\| (E^T e_3)^T \tilde{R} (E^T e_3).
+%     \end{align*}
+%     つぎに，次式を示す．
+%     \begin{align}
+%         \label{eq:proof_w}
+%         w = \frac{v_{3d}^b \tilde{R} (E^T e_3)}{(E^T e_3)^T \tilde{R} (E^T e_3)}.
+%     \end{align}
+%     式\eqref{eq:proof_w_norm}より，
+%     \begin{align}
+%         \label{eq:proof_w_1}
+%         \frac{v_{3d}^b}{(E^T e_3)^T \tilde{R} (E^T e_3)} = \|w\| = \frac{w}{R_d (E^T e_3)}.
+%     \end{align}
+%     ゆえに，
+%     \begin{align*}
+%     w = \frac{v_{3d}^b R_d (E^T e_3)}{(E^T e_3)^T \tilde{R} (E^T e_3)}.
+%     \end{align*}
+% \end{proof}
+Therefore, the error system containing the translational kinematics, dynamics, velocity feedback, and the velocity projection was derived.
+Then, \eqref{eq:error_translation_dynamics_of_yz_without_second_term} is given by the following equation,
+\begin{align}
+    \tilde{\dot{X}} &= - K_p \tilde{X} + \|w\| \\
+    &\left (  \left ( \left ( E^T e_3 \right )^T \tilde{R} \left (E^T e_3 \right ) \right ) R_d \tilde{R} \left (E^T e_3 \right ) - R_d \left (E^T e_3\right ) \right ).
+    \label{eq:error_translation_of_yz_without_second_term_with_controller}
+\end{align}
+% ここからはRodriguez論文のProp3とProp4と全く同じなので参照して省略する
+Hence, the following theorem is obtained from Proposition 3 of \cite{rodriguez-cortesNewGeometricTrajectory2022}.
+\begin{theorem}{\textcolor{red}{rodoriguezと一緒なら引用した方が良い\cite{rodriguez-cortesNewGeometricTrajectory2022}}}
+    We assume that the target trajectory $ X_d = [y_d ~ z_d]^T \in \mathbb{R}^2 $ satisfies the following assumption,
+    \begin{align}
+        \label{eq:assumption_of_Xd}
+        \| \dot{X}_d \| \leq \sigma.
+    \end{align}
+    where $ \sigma \in \mathbb{R}$ is a positive constant.
+    Consider the closed system \eqref{eq:translation_kinematics_of_yz_without_second_term} with the controller \eqref{eq:controller_of_translation}.
+    Then, the trajectory of the closed-loop dynamics does not escape in finite time.
+\end{theorem}
+% \begin{proof}
+%     リアプノフ関数を$ V = \frac{1}{2}\tilde{X}^T \tilde{X} $として証明できる．
+%     \begin{align}
+%         \dot{V} &= \tilde{X}^T \dot{\tilde{X}} \\
+%         % &= \tilde{X}^T ( -\frac{1}{\cos \gamma_d} K_p \tilde{X} + \frac{1}{\cos \gamma_d} \|w\| \\
+%         % &( ( ( E^T e_3)^T \tilde{R} (E^T e_3)) R_d \tilde{R} (E^T e_3)  - R_d(E^T e_3))) \\
+%         &= -  \tilde{X}^T K_p \tilde{X} +  \| - K_p \tilde{X} + \tilde{\dot{X}}_d \| \tilde{X}^T \\
+%         & \left ( \left ( \left ( E^T e_3 \right )^T \tilde{R} \left (E^T e_3 \right ) \right ) R_d \tilde{R} \left (E^T e_3 \right ) - R_d \left (E^T e_3 \right ) \right ).
+%         \label{eq:Lyapunov_function}
+%     \end{align}
+%     ここで，
+%     \begin{align}
+%         \label{eq:Lyapunov_function_1}
+%         \tilde{X}^T \left ( \left ( \left ( E^T e_3 \right )^T \tilde{R} \left (E^T e_3 \right ) \right ) R_d \tilde{R} \left (E^T e_3 \right ) - R_d \left (E^T e_3 \right ) \right ) \\
+%         \leq \left \|\tilde{X} \right \| \left \| \left (E^T e_3 \right )^T \tilde{R} \left (E^T e_3 \right ) R_d \tilde{R} \left (E^T e_3 \right ) - R_d \left (E^T e_3 \right ) \right \|.
+%     \end{align}
+%     であり，
+%     \begin{align}
+%         \label{eq:Lyapunov_function_2}
+%         \left \| \left (E^T e_3 \right )^T \tilde{R} \left (E^T e_3 \right ) R_d \tilde{R} \left (E^T e_3 \right ) - R_d \left (E^T e_3 \right ) \right \| \leq 2.
+%     \end{align}
+%     なので，
+%     \begin{align}
+%         \label{eq:Lyapunov_function_3}
+%         \tilde{X}^T \left ( \left ( \left ( E^T e_3 \right )^T \tilde{R} \left (E^T e_3 \right ) \right ) R_d \tilde{R} \left (E^T e_3 \right ) - R_d \left (E^T e_3 \right ) \right ) \leq 2 \| \tilde{X} \|.
+%     \end{align}
+%     が導ける．
+%     式\eqref{eq:Lyapunov_function}, \eqref{eq:Lyapunov_function_3}より，
+%     \begin{align}
+%         \label{eq:Lyapunov_function_4}
+%         \dot{V} \leq -  \tilde{X}^T K_p \tilde{X} + 2 \|-K_p \tilde{X} + \dot{X}_d \| ~ \|\tilde{X}\|.
+%     \end{align}
+%     また，$ \| -K_p \tilde{X} + \dot{X}_d| \leq \| - K_p \tilde{X} \| + \| \dot{X}_d \| $を式\eqref{eq:Lyapunov_function_4}に用いると，
+%     \begin{align}
+%         \dot{V} \leq -  \tilde{X}^T K_p \tilde{X} &+ 2 \|-K_p \tilde{X} \| ~ \| \tilde{X}\| \\
+%         &+ 2 \| \tilde{X} \| ~ \| \dot{X}_d \|.
+%         \label{eq:Lyapunov_function_5}
+%     \end{align}
+%     ここで，実対称行列のスペクトルノルムはその大きさが最大である固有値の絶対値に等しいことが知られている．
+%     よって，
+%     \begin{align}
+%         \label{eq:Lyapunov_function_6}
+%         \| K_p \| = \mathrm{sup} \frac{\|K_p \tilde{X}\|}{\| \tilde{X}\|} = \lambda_M (K_p).
+%     \end{align}
+%     ゆえに，\begin{align}
+%         \label{eq:Lyapunov_function_7}
+%         \lambda_M(K_p) \geq \frac{\| K_p \tilde{X} \| }{\| \tilde{X} \|}.
+%     \end{align}
+%     となり，$ \| K_p \tilde{X} \| \leq \lambda_M (K_p) \| \tilde{X} \| $ から式\eqref{eq:Lyapunov_function_5}は次式となる．
+%     \begin{align}
+%         \label{eq:Lyapunov_function_8}
+%         \dot{V} \leq - \tilde{X}^T K_p \tilde{X} + 2 \lambda_M (K_p) \| \tilde{X} \|^2 \\
+%         + 2 \| \tilde{X} \| ~ \| \dot{X}_d \|.
+%     \end{align}
+%     さらに，$ \lambda_m (K_p) \| \tilde{X} \|^2 \leq \tilde{X}^T K_p \tilde{X} $なので次式が成り立つ．
+%     \begin{align}
+%         \label{eq:Lyapunov_function_10}
+%         - \tilde{X}^T K_p \tilde{X} \leq - \lambda_m (K_p) \|\tilde{X}\|^2.
+%     \end{align}
+%     ゆえ，
+%     \begin{align}
+%         \label{eq:Lyapunov_function_11}
+%         \dot{V} &\leq  \left ( -\lambda_m \left (K_p \right ) \| \tilde{X} \|^2 + 2 \lambda_M \left (K_p \right ) \| \tilde{X} \|^2 + 2 \| \tilde{X} \| ~ \| \dot{X}_d\| \right )\\
+%         &= \left ( \left (2 \lambda_M \left (K_p \right ) - \lambda_m \left (K_p \right ) \right )\| \tilde{X} \|^2 + 2 \| \tilde{X} \| ~ \| \dot{X}_d \| \right ).
+%     \end{align}
+%     となるので，正定数$ \kappa $を用いて次式であらわせる．
+%     \begin{align}
+%         \label{eq:Lyapunov_function_12}
+%         \dot{V} \leq \kappa V + \sigma^2.
+%     \end{align}
+%     よって，$ V $はすべての時刻$ t \geq 0 $で存在し，$ \tilde{X} $も存在することが示された．
+% \end{proof}
+Hence, the main theorem of the stability in this paper is obtained as follows.
+\begin{theorem}
+    Consider the closed-loop system of the kinematics \eqref{eq:kinematics_of_translation}, \eqref{eq:kinematic_of_rotation_with_constraint_simplified_ver}, and the dynamics \eqref{eq:translational_dynamics}, \eqref{eq:rotational_el_eq} of the two-wheeled drones with the controller \eqref{eq:controller_of_pitch}, \eqref{eq:controller_of_translation}, and \eqref{eq:controller_of_roll}.
+    Then, the equilibrium points $ \tilde{p} = 0 $ and $ \tilde{R} = I $ are almost global asymptotically stable.
+\end{theorem}
+\textcolor{red}{指示が悪かったかもしれないけどこれの証明は必要なんじゃない？（定理3.1との差分だけで）}
+% \begin{proof}
+%     カスケードシステムの安定性をもとに証明する．
+%     車輪付きドローンの閉ループ系は次式であらわせる．
+%     \begin{align}
+%         \tilde{\dot{X}} = - K_p \tilde{X} + \| K_p \tilde{X} + \dot{X}_d \| \\
+%         \left ( \left ( \left (E^Te_3 \right )^T \tilde{R} \right ) R_d \tilde{R} (E^T e_3) - R_d (E^T e_3) \right ) \\
+%         + \Delta_2 + \Delta_3 \\
+%         \dot{\tilde{R}} = - k_R \tilde{R} \mathrm{sk} (\tilde{R}) + \Delta_1''' \\
+%         \ddot{\gamma}_e = - k_{p_{\gamma}} \gamma_e - k_{d_{\gamma}} \dot{\gamma}_e.
+%         \label{eq:stability_proof_of_cascade_1}
+%     \end{align}
+%     相互接続項は次式である．
+%     \begin{align}
+%         \label{eq:stability_proof_of_cascade_2}
+%         \Psi(\tilde{R}, \tilde{X} , t) = \| K_p \tilde{X} + \dot{X}_d \| \\
+%         \left ( \left ( \left (E^Te_3 \right )^T \tilde{R} \right ) R_d \tilde{R} \left (E^T e_3 \right ) - R_d \left (E^T e_3 \right ) \right ).
+%     \end{align}
+%     $ \Psi(\tilde{R}, \tilde{X} , t) $は次の不等式を満たす．
+%     \begin{align}
+%         \label{eq:stability_proof_of_cascade_3}
+%         \| \Psi(\tilde{R}, \tilde{X} , t) \| \leq \lambda_M (K_P) \gamma_1(\tilde{R}) \| \tilde{X} \| + \sigma \gamma_1(\tilde{R}).
+%     \end{align}
+%     ここで，$ \gamma_1 (\tilde{R}) $は次式とする．
+%     \begin{align}
+%         \label{eq:stability_proof_of_cascade_4}
+%         \gamma_1 (\tilde{R}) = \| \left ( \left (E^Te_3 \right )^T \tilde{R} \right ) R_d \tilde{R} \left (E^T e_3 \right ) - R_d \left (E^T e_3 \right ) \|.
+%     \end{align}
+%     式\eqref{eq:stability_proof_of_cascade_1}の$ \Delta_1'''  $が$ 0 $に収束するとき，$ \tilde{R} $は$ \tilde{R} = I $に漸近収束する．
+%     そのとき，$ \Psi(\tilde{R}, \tilde{X}, t) $が$ 0 $に収束する．これと，$ \Delta_2 $と$ \Delta_3 $が$ 0 $に収束すれば，並進誤差ダイナミクスはほぼ大域的漸近収束する．
+%     ここで，$ \Psi(\tilde{R}, \tilde{X}, t) $は線形増加するため，\cite{sepulchre1997constructive}のProposition4.11の仮定を満たす．
+%     したがって，$ \tilde{\dot{X}} $と$ \tilde{R} $の平衡点はほぼ大域的漸近安定であることが示された．
+% \end{proof}
+
+\section{Control design using control barrier functions}
+\label{sec:control_design_using_CBF}
+In this chapter, we design a control barrier function (CBF) to avoid obstacles considering sideslipping.
+\subsection{Control design of ECBF-QP for obstacle avoidance}
+\label{subsec:obstQP_roll_torque}
+%ISCIE
+
+We consider the control barrier function as follows,
+\begin{align*}
+    h_{\mathrm{obst}} = (y- y_c)^2 + (z- z_c)^2 - r^2.
+\end{align*}
+We consider the linearized roll torque $ \tilde{\tau}_{\beta}^b $ as an input.
+% よって，並進方向の運動方程式より，$ \lambda_1 $, $ \lambda_2 $は$ \dot{\eta} $の次元に相当するため，入力$ \tilde{\tau}_{\beta}^b $は$ \dddot{p} $の次元であらわれることがわかる．
+% したがって，$ h $の3階微分を考えると次式であらわせる．
+% \begin{align}
+%     \label{eq:dddh_obst_iscie}
+%     \dddot{h} = 6 \ddot{y}\dot{y} - 2(z_c - z)\dddot{z} - 2(y_c - y)\dddot{y} + 6 \ddot{z} \dot{z}.
+% \end{align}
+% また，並進方向の運動方程式より，次式が得られる．
+% \begin{align}
+%     \label{eq:ddp_obst_iscie}
+%     \ddot{p} = \frac{Rfe_3 - mge_3 - \lambda_1 A^T - \lambda_2 e_1}{m}.
+% \end{align}
+% よって，\eqref{eq:ddp_obst_iscie}を時間微分し，\eqref{eq:dddh_obst_iscie}の$ \dddot{y} $と$ \dddot{z} $に代入する．
+Therefore, $ \dddot{h}_{\mathrm{obst}} + \alpha_1 h_{\mathrm{obst}} + \alpha_2 \dot{h}_{\mathrm{obst}} + \alpha_3 \ddot{h}_{\mathrm{obst}} \geq 0 $ can be written as follows,
+\begin{align}
+    \label{eq:obstQP}
+    f_x + g_x \tilde{\tau}_{\beta}^b \leq 0
+\end{align}
+where $ f_x $, $ g_x $ can be obtained by  Symbolic Math Toolbox in MATLAB, especially $ g_x $ is as follows,
+\begin{align*}
+    g_x = 2 \left ( \left (z_c - z \right ) \sin \beta + \left (y_c - y \right ) \cos \beta \right ) \\
+    \times (- \cos \beta \dot{z} + \sin \beta \dot{y}).
+\end{align*}
+Hence, ECBF-QP for obstacle avoidance is obtained as follows,
+\begin{align}
+    \label{eq:obstQP_final}
+    \begin{cases}
+        \tilde{\tau}_{\mathrm{obst}}^b = \argmin_{\tilde{\tau}_{\mathrm{obst}}^b \in \mathbb{R}} \| \tilde{\tau}_{\mathrm{obst}}^b - \tilde{\tau}_0^b \| ^2 \\
+        \mathrm{s.t.} \quad f_x + g_x \tilde{\tau}_{\beta}^b \leq 0.
+        \end{cases}
+\end{align}
+\subsection{Control design of ECBF-QP for sideslip}
+\label{subsec:sideslip}
+When avoiding obstacles, two-wheeled drones need to roll, so sideslip is likely to occur.
+For HyTAQs, there is research on considering sideslipping during ground running \cite{wuUnifiedTerrestrialAerial2023}.
+In this chapter, we design a control barrier function to avoid sideslip in addition to the control barrier function for obstacle avoidance and consider the linearized pitch toqrue $ \tilde{\tau}_{\gamma}^b $ as an input.
+
+Condition not to sideslip can be written as follows,
+\begin{align}
+    \label{eq:slip_condition_general}
+    f_{\mathrm{slip}} \leq \mu N
+\end{align}
+where $ f_{\mathrm{slip}} $ is the force to make the drone sideslip, $ N $ is the force to push the drone against the wall, and $ \mu $ is the coefficient of static friction.
+The force to make the drone sideslip is $ \| \lambda_1 A^T \| $, and the force to push the drone against the wall is $ \| \lambda_2 e_1 \| $, so \eqref{eq:slip_condition_general} can be written as follows,
+\begin{align}
+    \label{eq:slip_condition_using_lambda}
+    \| \lambda_1 A^T \| \leq \mu \| \lambda_2 e_1 \|.
+\end{align}
+$ \lambda_1 $ can take both positive and negative values, but $ \lambda_2 \geq 0 $, and $ \| A^T \| = 1 $ and $ \| e_1 \| = 1 $, so \eqref{eq:slip_condition_using_lambda} can be written as follows,
+\begin{align}
+    \label{eq:slip_condition_using_lambda_2}
+    \| \lambda_1 \| \leq \mu \lambda_2.
+\end{align}
+The inequality \eqref{eq:slip_condition_using_lambda_2} is an inequality containing absolute values, so we consider the conditions by dividing the cases.
+
+If $ \lambda_1 \geq 0 $, \eqref{eq:slip_condition_using_lambda_2} can be written as follows,
+\begin{align}
+    \label{eq:slip_condition_using_lambda_5}
+    mg \sin \beta + f \mu \sin \gamma - m \cos \beta \dot{z} \dot{\beta} + m \sin \beta \dot{y} \dot{\beta} \geq 0.
+\end{align}
+Therefore, the control barrier function $ h_{\mathrm{slip}_1} $ can be defined as follows,
+\begin{align}
+    h_{\mathrm{slip}_1} \coloneqq mg \sin \beta + f \mu \sin \gamma \\
+    - m \cos \beta \dot{z} \dot{\beta} + m \sin \beta \dot{y} \dot{\beta}.
+    \label{eq:slip_control_barrier_function_1}
+\end{align}
+\eqref{eq:slip_control_barrier_function_1} is a function of $ \tilde{\tau}_{\gamma}^b $ in the second order, so the relative degree is 2.
+Therefore, $ \ddot{h}_{\mathrm{slip}_1} + \alpha_4 \dot{h}_{\mathrm{slip}_1}  + \alpha_5 \dot{h}_{\mathrm{slip}_1} \geq 0 $ can be written as follows,
+\begin{align}
+    \label{eq:sideslipQP_1}
+    f_x + g_x \tilde{\tau}_{\gamma}^b \leq 0
+\end{align}
+where $ f_x $, $ g_x $ can be obtained by Symbolic Math Toolbox in MATLAB, especially $ g_x $ is as follows,
+\begin{align*}
+    g_x = - \mu \cos \gamma f.
+\end{align*}
+
+If $ \lambda_1 < 0 $, the control barrier function $ h_{\mathrm{slip}_2} $ can be defined as follows similar to $ \lambda_1 \geq 0 $,
+\begin{align}
+    \label{eq:slip_control_barrier_function_2}
+    h_{\mathrm{slip}_2} \coloneqq f \mu \sin \gamma - mg \sin \beta \\
+    + m \cos \beta \dot{z} \dot{\beta} - m \sin \beta \dot{y} \dot{\beta}.  
+\end{align}
+Therefore, $ \ddot{h}_{\mathrm{slip}_2} + \alpha_4 \dot{h}_{\mathrm{slip}_2}  + \alpha_5 \dot{h}_{\mathrm{slip}_2} \geq 0 $ can be written as follows,
+\begin{align}
+    \label{eq:sideslipQP_2}
+    f_x + g_x \tilde{\tau}_{\gamma}^b \leq 0
+\end{align}
+where $ f_x $, $ g_x $ can be obtained by Symbolic Math Toolbox in MATLAB, especially $ g_x $ is as follows,
+\begin{align*}
+    g_x = - \mu \cos \gamma f.
+\end{align*}
+Hence, ECBF-QP for sideslip is obtained as follows,
+\begin{align}
+    \label{eq:slipQP_final}
+    \begin{cases}
+        \tilde{\tau}_{\mathrm{slip}}^b = \argmin_{\tilde{\tau}_{\mathrm{slip}}^b \in \mathbb{R}} \| \tilde{\tau}_{\mathrm{slip}}^b - \tilde{\tau}_{\mathrm{obst}}^b \| ^2 \\
+        \mathrm{s.t.} \quad f_x + g_x \tilde{\tau}_{\gamma}^b \leq 0.
+        \end{cases}
+\end{align}
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=1\linewidth]{./drawing/pdf/control_structure_ECBF-QP_obst_sideslip_simple.pdf}
+    \caption{Control structure of ECBF-QP.}
+    \label{fig:control_structure_of_ECBF-QP}
+\end{figure}
+The control structure of the ECBF-QP combined with obstacle avoidance and sideslip is shown in Fig.~\ref{fig:control_structure_of_ECBF-QP}.
+The constraint equation of ECBF-QP for obstacle avoidance contains $ \tilde{\tau}_{\beta}^b $, but doesn't contain $ \tilde{\tau}_{\gamma}^b $.
+On the other hand, the constraint equation of ECBF-QP for sideslip contain both $ \tilde{\tau}_{\beta}^b $ and $ \tilde{\tau}_{\gamma}^b $.
+Therefore, the linearized roll torque $ \tilde{\tau}_{\beta}^b $ is modified by the ECBF-QP for obstacle avoidance, and then, the linearized pitch torque $ \tilde{\tau}_{\gamma}^b $ is modified by the ECBF-QP for sideslip.
