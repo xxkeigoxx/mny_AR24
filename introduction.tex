@@ -1,0 +1,35 @@
+\section{Introduction}
+Exterior wall tiles used in many buildings can be peeled off and falled because of aging.
+In fact, it is mandatory to inspect them every 10 years.
+% \cite{MLIT}.
+Normally, the inspection is carried out by engineers, but the inspection depends on the experience of the engineers and involves work at high places.
+Especially, among the labor accidents, the number of fatal accidents in construction industries is the highest, and the number of falling is the highest in construction industries.
+% \cite{MHLW}.
+To solve such problems, it is expected that drones will conduct hammering tests and infrared inspections without depending on experience and with less risk.
+% \cite{dotaro2018drone, daisuke2016drone, miho2021drone}.
+By manually controlling wheeled drones, engineers can inspect without taking risks.   
+However, manual control depends on the experience of engineers.
+
+Therefore, in this paper, we propose an autonomous control of two-wheeled drones.
+Research on autonomous control of drones without wheels \cite{kooijmanTrajectoryTrackingQuadrotors2019, leeControlComplexManeuvers2011a, leeGeometricTrackingControl2010} and research on autonomous control of HyTAQs (Hybrid Terrestrial and Aerial Quadrotors) \cite{fanAutonomousHybridGround2019, kalantariDesignExperimentalValidation2013, wuMotionPlanningHyTAQs2022} have been conducted.
+% , nonami2017drone
+A two-wheeled drone has a system with a nonholonomic constraint.
+%  \cite{shima1997nonlinear}. 
+It is known that there is no continuous static state feedback controller that makes the origin of the system of a unicycle mobile robot almost global asymptotically stable \cite{brockett1983asymptotic}.  
+Furthermore, the attitude of the two-wheeled drone is a nonlinear configuration space with a unit circle, so there is no continuous static state feedback that makes the system global asymptotically stable \cite{sanjay2000topological}.
+Controllers for the two-wheeled drone with nonholonomic constraint has been proposed \cite{rodriguez-cortesNewGeometricTrajectory2022}.
+% {Time-State_Control_Form}.
+The two-wheeled drone has an additional degree of freedom because it is necessary to consider the rotation of pitch direction in addition to the rotation of a roll direction on a wall.
+Therefore, in this paper, we extend the attitude control, and propose the control law that includes dynamics not considered in \cite{rodriguez-cortesNewGeometricTrajectory2022}.
+Furthermore, since a drone has a cascade structure, it is necessary to consider the interconnection term \cite{lee2013nonlinear} to discuss stability.
+We prove that the origin of  the system of the two-wheeled drone with the control law in this paper is almost globally asymptotically stable \cite{angeli2001almost}.
+
+In wall inspections, there is a risk that the drone will be damaged if it collides with windows, pipes, etc. when running on the wall, so the two-wheeled drone needs to avoid obstacles on a wall.
+Control barrier functions (CBF) has been studied in recent years to ensure the safety of systems \cite{amesControlBarrierFunction2017, amesControlBarrierFunctions2019a, huangGuaranteedVehicleSafety2019, liSurveyControlLyapunov2023}.
+For example, it has been applied to ACC (Adaptive Cruise Control) of automobiles \cite{amesControlBarrierFunction2014, xiaoControlBarrierFunctions2019} and obstacle avoidance for nonholonomic systems\cite{desaiCLFCBFBasedQuadratic2022, marleySynergisticControlBarrier2021}.
+There are also studies on control laws using CBFs for drones to avoid obstacles \cite{khanBarrierFunctionsCascaded2020, wuSafetycriticalControlPlanar2016}.
+In this paper, we use ECBF to avoid obstacles.
+In obstacle avoidance of the two-wheeled drone on a wall, the roll is likely to become large and it is easy to slip.
+On the other hand, by tilting the pitch and pressing the two-wheeled drone against a wall, it is less likely to slip.
+Therefore, we propose a control law to avoid slipping by modifying the torque of the pitch using control barrier function.
+Furthermore, we conduct numerical simulations using the proposed control law to verify the effectiveness.

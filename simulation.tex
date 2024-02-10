@@ -1,0 +1,89 @@
+\section{Simulation condition and results}
+\label{chap:simulation}
+
+In this chapter, we verify that the control objectives are achieved by simulation of the control design in this paper.
+We consider $ m = 0.938 \si{kg} $, $ J=\mathrm{diag}[0.00933 ~ 0.00285 ~ 0.01130] \si{kg.m^2} $, $ g = 9.81 \si{m/s^2} $ as the physical parameters of the two-wheeled drone.
+We also consider $ k_3 = 10 $ as the velocity feedback gain, $ K_p = \mathrm{diag}([0.5, 0.5 ,0.5]) $ as the position controller, $ k_R = 4 $, $ k_{\beta} = 2 $, $ k_{p_{\gamma}} = 5 $, $ k_{d_{\gamma}} = 5 $ as the attitude controller and $ [y_c ~ z_c] = [-0.2 ~ 1.0] \si{m} $, $ r = 0.5 \si{m} $, $ \alpha_1 = 0.4 $, $ \alpha_2 = 0.3 $, $ \alpha_3 = 0.3 $ as the parameters of the ECBF-QP for obstacle avoidance, and $ \mu = 0.5 $, $ \alpha_4 = 20 $, $ \alpha_5 = 10 $ as the parameters of the ECBF-QP for avoiding sideslip.
+Furthermore, the initial values are $ p_0 = [0 ~ 0 ~ 0]^T \si{m} $, $ \dot{p}_0 = [0 ~ 0 ~ 0]^T \si{m/s} $, $ \eta_0 = [0 ~ 0 ~ \frac{5 \pi}{180}]^T \si{rad} $, $ \dot{\eta}_0 = [0 ~ 0 ~ 0]^T \si{rad/s} $, the target value is $ \gamma_d = \frac{15 \pi}{180} \si{rad} $, and the target trajectory on the wall $ p_d $ is given by the following equation,
+\begin{align*}
+      p_d =
+      \begin{bmatrix}
+        0\\
+        0.2 \sin \frac{15 \pi}{180}t ~ ( 0 \leq t < 6) ,  \quad 0.2 ~ (6 \leq t)\\
+        0.2t
+      \end{bmatrix}.
+\end{align*}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=1\linewidth]{./simulation/euler_obst_sideslip_iscie/figs/with_obstQP_with_sideslipQP/pdf/Position.pdf}
+\caption{Simulation result of position.}
+\label{figs:simulation_result_of_position}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=1\linewidth]{./simulation/euler_obst_sideslip_iscie/figs/with_obstQP_with_sideslipQP/pdf/Attitude.pdf}
+\caption{Simulation result of attitude.}
+\label{figs:simulation_result_of_attitude}
+\end{figure}
+ 
+\begin{figure}[t]
+\centering
+\includegraphics[width=1\linewidth]{./simulation/euler_obst_sideslip_iscie/figs/with_obstQP_with_sideslipQP/pdf/Thrust.pdf}
+\caption{Simulation result of thrust.}
+\label{figs:simulation_result_of_thrust}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=1\linewidth]{./simulation/euler_obst_sideslip_iscie/figs/with_obstQP_with_sideslipQP/pdf/Torque.pdf}
+\caption{Simulation result of torque.}
+\label{figs:simulation_result_of_torque}
+\end{figure}
+
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=1\linewidth]{./simulation/euler_obst_sideslip_iscie/figs/with_obstQP_with_sideslipQP/animation/pdf/trajectory.pdf}
+  \caption{Animation of the simulation result.}
+  \label{figs:animation_of_the_simulation_result}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=1\linewidth]{./simulation/euler_obst_sideslip_iscie/figs/with_obstQP_with_sideslipQP/pdf/Trajectory.pdf}
+  \caption{Trajectory of the simulation result.}
+  \label{figs:trajectory_of_the_simulation_result}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=1\linewidth]{./simulation/euler_obst_sideslip_iscie/figs/with_obstQP_with_sideslipQP/pdf/h_obst.pdf}
+\caption{Obstacle CBF of the simulation result.}
+\label{figs:obstacle_CBF_of_the_simulation_result}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=1\linewidth]{./simulation/euler_obst_sideslip_iscie/figs/with_obstQP_with_sideslipQP/pdf/h_slip.pdf}
+\caption{Sideslip CBF of the simulation result.}
+\label{figs:sideslip_CBF_of_the_simulation_result}
+\end{figure}
+
+We show the simulation results of the position, attitude, thrust, and torque in Fig.~\ref{figs:simulation_result_of_position}, Fig.~\ref{figs:simulation_result_of_attitude}, Fig.~\ref{figs:simulation_result_of_thrust}, Fig.~\ref{figs:simulation_result_of_torque}, respectively.
+We also show the animation of the simulation result in Fig.~\ref{figs:animation_of_the_simulation_result} and the trajectory on the wall in Fig.~\ref{figs:trajectory_of_the_simulation_result}.
+From Fig.~\ref{figs:simulation_result_of_position}, Fig.~\ref{figs:trajectory_of_the_simulation_result}.
+We can see that the two-wheeled drone avoids the obstacle and follows the target trajectory.
+Furthermore, we show the control barrier functions for obstacle avoidance and sideslip in Fig.~\ref{figs:obstacle_CBF_of_the_simulation_result}, Fig.~\ref{figs:sideslip_CBF_of_the_simulation_result}, respectively.
+The control barrier function for sideslip is defined by the following equation,
+\begin{align}
+  h_{\mathrm{slip}} =
+  \begin{cases}
+     h_{\mathrm{slip}_1} &~ (\lambda_1 \geq 0), \\
+     h_{\mathrm{slip}_2} &~ (\lambda_1 < 0).
+    \label{eq:definition_of_h_slip}
+  \end{cases}
+\end{align}
+From Fig.~\ref{figs:obstacle_CBF_of_the_simulation_result}, we can see that $ h_{\mathrm{obst}} \geq 0 $, and from Fig.~\ref{figs:sideslip_CBF_of_the_simulation_result}, we can see that $ h_{\mathrm{slip}} \geq 0 $.
+Therefore, the two-wheeled drone satisfies the constraints of obstacle avoidance and sideslip.
