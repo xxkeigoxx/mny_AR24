@@ -3,6 +3,7 @@
 
 % 数学的準備や主結果などのメイン部分 \cite{latex}．
 \section{Preliminaries}
+\textcolor{red}{In this section, we derive the two-wheeled drone model and ECBF.}
 \subsection{Two-wheeled drone model}
 \begin{figure}[t]
     \centering
@@ -14,7 +15,33 @@
 Consider a two-wheeled drone moving on a wall illustrated in Fig.~\ref{fig:two-wheeled_drone_moving_on_a_wall}.
 We choose an inertial frame $e_i \in \mathbb{R}^3$, $i \in \{1, 2, 3 \}$ and a body-fixed frame $\{b_x, b_y, b_z\}$.
 The origin of the body-fixed frame is the center of mass of the drone.
-The mass of the drone is $m \in \mathbb{R}$, acceleration of gravity is $g \in \mathbb{R}$, inertia tensor is $J \in \mathbb{R}^{3 \times 3}$, rotation matrix is $R \in SO(3)$, $ZXY$ Euler angles is $\eta = [\alpha ~ \beta ~ \gamma]^T \in \mathbb{R}^3$, body angular velocity is $\omega^b = [\omega_1^b ~ \omega_2^b ~ \omega_3^b]^T \in \mathbb{R}^3$, position in the world frame is $p = [x ~ y ~ z]^T \in \mathbb{R}^3$, body velocity is $v^b = [v_1^b ~ v_2^b ~ v_3^b]^T \in \mathbb{R}^ 3$, thrust is $F^b = [0 ~ 0 ~ f] \in \mathbb{R}^3$, body torque is $\tau^b \in \mathbb{R}^3$.
+\textcolor{red}{
+The mass of the drone is $m \in \mathbb{R}$, acceleration of gravity is $g \in \mathbb{R}$, position in the world frame is $p = [x ~ y ~ z]^T \in \mathbb{R}^3$, body velocity is $v^b = [v_1^b ~ v_2^b ~ v_3^b]^T \in \mathbb{R}^ 3$, thrust is $f \in \mathbb{R}$, inertia tensor is $J \in \mathbb{R}^{3 \times 3}$, $ZXY$ Euler angles is $\eta = [\alpha ~ \beta ~ \gamma]^T \in \mathbb{R}^3$, rotation matrix is $R \in SO(3)$, body angular velocity is $\omega^b = [\omega_1^b ~ \omega_2^b ~ \omega_3^b]^T \in \mathbb{R}^3$, body torque is $\tau^b \in \mathbb{R}^3$, and $ \lambda_j $, $ j \in \{1,2,3\} $ is Lagrangian multipliers.
+}
+\textcolor{red}{
+The two-wheeled drone running on the wall as shown in Fig.~\ref{fig:two-wheeled_drone_moving_on_a_wall} has the following constraints,
+\begin{enumerate}
+    \item Not to slip on the wall.
+    \item Constant distance from the wall.
+    \item Not to rotate around the wall.
+\end{enumerate}
+These constraints can be written as the following equation,
+\begin{align}
+    \begin{cases}
+        \label{eq:constraints_of_the_two-wheeled_drone}
+        f_1 &= v_2^b = r_{12} \dot{x} + r_{22} \dot{y} + r_{32} \dot{z} = 0\\
+        f_2 &= x + \frac{D}{2} - L = 0\\
+        f_3 &= e_1^T b_y = r_{12} = e_1^T (\eta - \eta_0)
+    \end{cases}
+\end{align}
+where $ D \in \mathbb{R} $ is the dismeter of the wheel, $ L \in \mathbb{R} $ is the distance from the origin to the wall.
+From the third equation of \eqref{eq:constraints_of_the_two-wheeled_drone}, the first equation of \eqref{eq:constraints_of_the_two-wheeled_drone} can be rewritten as follows,
+\begin{align}
+    \label{eq:first_constraint_rewritten}
+    f_1 = r_{22} \dot{y} + r_{32} \dot{z} = A \dot{p} = 0
+\end{align}
+where $ A = [0 ~ r_{22} ~ r_{32}] $.
+}
 
 The kinematics of the translational motion is given by
 \begin{align}
@@ -82,15 +109,24 @@ The inverse of $ \Phi(\eta) $ is $ \Psi = \Phi^{-1} $, which is given by
 The dynamics of the translational motion is given by
 \begin{align}
 	\label{eq:translational_dynamics}
-	m\ddot{p}+mge_3 +\lambda_1 A^T +\lambda_2 e_1 = Rfe_3.
+	m\ddot{p}+mge_3 +\lambda_1 A^T +\lambda_2 e_1 = Rfe_3
 \end{align}
+\textcolor{red}{where $ \lambda_1 $ is the term about side slipping, $ \lambda_2 $ is the term about the force to push the drone against the wall, and
+\begin{align}
+    A = [0 ~ r_{22} ~ r_{32}].
+\end{align}}
 
 The dynamics of the rotational motion \cite{nonami_autonomous_2010} is given by
 \begin{align}
     \label{eq:rotational_el_eq}
-    M(\eta) \ddot{\eta} + C(\eta, \dot{\eta}) \dot{\eta} = \Psi(\eta)^T \tau^b - \lambda_3 e_1.
+    M(\eta) \ddot{\eta} + C(\eta, \dot{\eta}) \dot{\eta} = \Psi(\eta)^T \tau^b - \lambda_3 e_1
 \end{align}
-
+\textcolor{red}{where $ \lambda_3 $ is the term about yawing and
+\begin{align}
+    \label{eq:definition_of_rotational_motion}
+    M(\eta) &= \Psi(\eta)^T J \Psi(\eta) \\
+    C(\eta,\dot{\eta}) &= \Psi(\eta)^T J \dot{\Psi} (\eta) + \Psi(\eta) \mathrm{sk}(\Psi(\eta) \dot{\eta}) J \Psi(\eta).
+\end{align}}
 \subsection{Exponential control barrier functions(ECBF)}
 \label{sec:ECBF}
 % \ref{sec:CBF}節で定義されたように，
@@ -101,58 +137,59 @@ We relax this relative degree condition and assume that $ h(x) $ has a higher re
     h^{(r)}(x,u) = L_f^r h(x) + L_g L_f^{r-1} h(x)u.
 \end{align}
 Here, $L_g L_f^{r-1} h(x) \neq 0 $ and $ L_g L_f^2 h(x) = \cdots ~ L_g L_f^{r-2} h(x) = 0 $, $ \forall x \in D $
-We further define the following,
-\begin{align}
-    \label{eq:definition_of_eta_b}
-    \eta_b(x) \coloneqq
-    \begin{bmatrix}
-        h(x) \\
-        \dot{h}(x) \\
-        \ddot{h}(x) \\
-        \vdots \\
-        h^{(r-1)}(x)
-    \end{bmatrix}
-    =
-    \begin{bmatrix}
-        h(x) \\
-        L_f h(x) \\
-        L_f^2 h(x) \\
-        \vdots \\
-        L_f^{r-1} h(x)
-    \end{bmatrix}.
-\end{align}
-We assume that there exists a control input $ u \in U_{\mu} \subset \mathbb{R} $ for $ \mu \in \mathbb{R} $ such that $ L_f^r h(x) + L_g L_f^{r-1} h(x) u = \mu $.
-Then, the dynamics of $ h(x) $ can be described as the following linear system,
-\begin{align}
-    \label{eq:linear_system_of_h}
-    \dot{\eta}_b(x) &= F \eta_b(x) + G \mu, \\
-    h(x) &= C \eta_b (x)
-\end{align}
-where
-\begin{align}
-    \label{eq:definition_of_F_G_C}
-    F &= 
-    \begin{bmatrix}
-        0 & 1 & 0 & \cdots & 0 \\
-        0 & 0 & 1 & \cdots & 0 \\
-        \vdots & \vdots & \vdots & \ddots & \vdots \\
-        0 & 0 & 0 & \cdots & 1 \\
-        0 & 0 & 0 & \cdots & 0
-    \end{bmatrix},
-    G = 
-    \begin{bmatrix}
-        0 \\
-        0 \\
-        \vdots \\
-        0 \\
-        1   
-    \end{bmatrix}, \\
-    C &= [1 ~ 0 ~ \cdots ~ 0].
-\end{align}
-If we choose the state feedback $ \mu = - K_{\alpha} \eta_b (x) $, then $ h(x(t)) = C e^{(F - GK_{\alpha})t} \eta_b (x_0) $.
-Furthermore, if $ \mu \geq -K_{\alpha} \eta_b (x) $, then $ h(x(t)) \geq C e^{(F - GK_{\alpha})t} \eta_b (x_0) $ by comparison lemma.
+% We further define the following,
+% \begin{align}
+%     \label{eq:definition_of_eta_b}
+%     \eta_b(x) \coloneqq
+%     \begin{bmatrix}
+%         h(x) \\
+%         \dot{h}(x) \\
+%         \ddot{h}(x) \\
+%         \vdots \\
+%         h^{(r-1)}(x)
+%     \end{bmatrix}
+%     =
+%     \begin{bmatrix}
+%         h(x) \\
+%         L_f h(x) \\
+%         L_f^2 h(x) \\
+%         \vdots \\
+%         L_f^{r-1} h(x)
+%     \end{bmatrix}.
+% \end{align}
+% We assume that there exists a control input $ u \in U_{\mu} \subset \mathbb{R} $ for $ \mu \in \mathbb{R} $ such that $ L_f^r h(x) + L_g L_f^{r-1} h(x) u = \mu $.
+% Then, the dynamics of $ h(x) $ can be described as the following linear system,
+% \begin{align}
+%     \label{eq:linear_system_of_h}
+%     \dot{\eta}_b(x) &= F \eta_b(x) + G \mu, \\
+%     h(x) &= C \eta_b (x)
+% \end{align}
+% where
+% \begin{align}
+%     \label{eq:definition_of_F_G_C}
+%     F &= 
+%     \begin{bmatrix}
+%         0 & 1 & 0 & \cdots & 0 \\
+%         0 & 0 & 1 & \cdots & 0 \\
+%         \vdots & \vdots & \vdots & \ddots & \vdots \\
+%         0 & 0 & 0 & \cdots & 1 \\
+%         0 & 0 & 0 & \cdots & 0
+%     \end{bmatrix},
+%     G = 
+%     \begin{bmatrix}
+%         0 \\
+%         0 \\
+%         \vdots \\
+%         0 \\
+%         1   
+%     \end{bmatrix}, \\
+%     C &= [1 ~ 0 ~ \cdots ~ 0].
+% \end{align}
+% If we choose the state feedback $ \mu = - K_{\alpha} \eta_b (x) $, then $ h(x(t)) = C e^{(F - GK_{\alpha})t} \eta_b (x_0) $.
+% Furthermore, if $ \mu \geq -K_{\alpha} \eta_b (x) $, then $ h(x(t)) \geq C e^{(F - GK_{\alpha})t} \eta_b (x_0) $ by comparison lemma.
 
 \begin{definition}
+    \cite{amesControlBarrierFunctions2019a}
     Given a set $ C \subset D \subset \mathbb{R} $, a function $ h : D \rightarrow \mathbb{R} $ that is $ r $ times continuously differentiable is an exponential control barrier function(ECBF) if there exists a column vector $ K_{\alpha} \in \mathbb{R}^r $ that satisfies the following equation for all $ x \in D $,
     \begin{align}
         \label{eq:definition_of_ECBF}
@@ -165,6 +202,7 @@ Furthermore, if $ \mu \geq -K_{\alpha} \eta_b (x) $, then $ h(x(t)) \geq C e^{(F
 \section{Control design}
 \label{sec:control_design}
 
+\textcolor{red}{In this section, we design the control law of trajectory tracking for the two-wheeled drone.}
 \begin{figure}[t]
 \centering
 \includegraphics[width=1\linewidth]{./drawing/pdf/control_structure_based_on_dynamics.pdf}
@@ -365,22 +403,42 @@ Hence, the main theorem of the stability in this paper is obtained as follows.
     \end{align}
     where $ \Delta_1 = -k_{\beta} (\dot{\beta} - r_{\beta}) $.
     Furthermore, by integrating both sides of \eqref{eq:roll_dynamics_and_controller_with_delta}, we get the following equation,
+    \textcolor{red}{
     \begin{align}
-    \label{eq:roll_dynamics_and_controller_with_delta_integrated}
-        \dot{\beta} = \int \Delta_1 dt + r_{\beta} = \Delta_1' + r_{\beta}.
+        \label{eq:roll_dynamics_and_controller_with_delta_integrated}
+        \dot{\beta} (t) = \int_{t_0}^t \ddot{\beta} (\tau) d\tau + \dot{\beta} (t_0) = \Delta_1' + r_{\beta}(t) - r_{\beta}(t_0) + \dot{\beta} (t_0)
     \end{align}
+    where $ \Delta_1' = \int_{t_0}^t \Delta_1 d\tau $.
     By writing \eqref{eq:roll_dynamics_and_controller_with_delta_integrated} as $ SO(2) $, we get the following equation,
     \begin{align}
         \label{eq:roll_dynamics_and_controller_SO(2)}
-        \dot{R} = R \hat{r}_{\beta} + \Delta_1''.
+        \dot{R} = R 
+        \begin{bmatrix}
+            0 & -\dot{\beta}(t)\\
+            \dot{\beta}(t) & 0
+        \end{bmatrix} = R
+        \begin{bmatrix}
+            0 & -r_{\beta}(t) \\
+            r_{\beta}(t) & 0
+        \end{bmatrix}
+        + \Delta_1''
     \end{align}
-    Furthermore, \eqref{eq:roll_dynamics_and_controller_SO(2)} can be rewritten as follows,
+    where
+    \begin{align}
+        \label{eq:definition_of_Delta1''}
+        \Delta_1'' = R
+        \begin{bmatrix}
+            0 & -(\Delta_1' + r_{\beta}(t) - r_{\beta}(t_0) + \dot{\beta} (t_0))\\
+            \Delta_1' + r_{\beta}(t) - r_{\beta}(t_0) + \dot{\beta} (t_0) & 0
+        \end{bmatrix}.
+    \end{align}
+    Furthermore, \eqref{eq:roll_dynamics_and_controller_SO(2)} can be rewritten to the error system as follows,
     \begin{align}
         \label{eq:roll_dynamics_and_controller_SO(2)_error}
-        \dot{\tilde{R}} = \tilde{R} \hat{\tilde{r}}_{\beta} + \Delta_1'''
+        \dot{\tilde{R}} = \tilde{R} \hat{\tilde{r}}_{\beta}(t) + \Delta_1'''
     \end{align}
     where $ \tilde{r}_{\beta} = r_{\beta} - r_{\beta_d} $.
-    
+    }
     From \eqref{eq:linearized_dynamics_of_pitch} and \eqref{eq:controller_of_pitch}, the linearized dynamics of the pitch direction is given by the following equation,
     \begin{align}
         \label{eq:pitch_dynamics_and_controller}
@@ -442,7 +500,7 @@ Hence, the main theorem of the stability in this paper is obtained as follows.
 
 \section{Control design using control barrier functions}
 \label{sec:control_design_using_CBF}
-In this chapter, we design a control barrier function (CBF) to avoid obstacles considering sideslipping.
+\textcolor{red}{In this section, we design ECBF-QP to avoid obstacles considering sideslipping.}
 
 \subsection{Problem settings and program formulation}
 \label{subsec:problem_setting}
